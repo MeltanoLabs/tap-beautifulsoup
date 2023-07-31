@@ -8,7 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def download(url: str, download_folder: Path | str = "output", verbose: bool = False):
+def download(url: str, download_folder: Path | str = "output", verbose: bool = False, logger = None):
     if not os.path.exists(download_folder):
         os.makedirs(download_folder)
 
@@ -27,7 +27,7 @@ def download(url: str, download_folder: Path | str = "output", verbose: bool = F
             response.raise_for_status()
             url = response.url
         except requests.exceptions.RequestException as e:
-            print(f"Failed to fetch {url}: {e}")
+            logger.warn(f"Failed to fetch {url}: {e}")
             return
 
         soup = BeautifulSoup(response.text, "html.parser")
