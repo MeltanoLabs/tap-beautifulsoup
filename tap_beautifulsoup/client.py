@@ -33,7 +33,7 @@ class BeautifulSoupStream(Stream):
 
     def download(self) -> None:
         """Download the HTML file for the stream."""
-        download(self.site_url, self.output_folder, self.logger)
+        download(self.site_url, self.output_folder, logger=self.logger)
 
     def parse_file(self, file: Path) -> str:
         """Parse the HTML file for the stream.
