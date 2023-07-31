@@ -19,7 +19,7 @@ def download(url: str, download_folder: Path | str = "output", verbose: bool = F
     visited_urls = set()
     visited_urls.add(parsed_url.path)
 
-    def _download_recursive(url, base_url):
+    def _download_recursive(url, base_url, logger):
         if not url.startswith(base_url):
             return
         try:
@@ -27,7 +27,7 @@ def download(url: str, download_folder: Path | str = "output", verbose: bool = F
             response.raise_for_status()
             url = response.url
         except requests.exceptions.RequestException as e:
-            logger.warn(f"Failed to fetch {url}: {e}")
+            logger.warning(f"Failed to fetch {url}: {e}")
             return
 
         soup = BeautifulSoup(response.text, "html.parser")
@@ -40,7 +40,7 @@ def download(url: str, download_folder: Path | str = "output", verbose: bool = F
 
             if parsed_url.path not in visited_urls and parsed_url.netloc == base_netloc:
                 visited_urls.add(parsed_url.path)
-                _download_recursive(full_url, base_url)
+                _download_recursive(full_url, base_url, logger)
 
         parsed_url = urlparse(url)
         if parsed_url.path.endswith(".html") or "text/html" in response.headers.get("Content-Type"):
@@ -56,4 +56,4 @@ def download(url: str, download_folder: Path | str = "output", verbose: bool = F
             with open(full_file_path, "wb") as f:
                 f.write(response.content)
 
-    _download_recursive(url, url)
+    _download_recursive(url, url, logger)
