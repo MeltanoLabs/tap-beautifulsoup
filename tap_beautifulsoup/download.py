@@ -43,12 +43,17 @@ def download(url: str, download_folder: Path | str = "output", verbose: bool = F
                 _download_recursive(full_url, base_url)
 
         parsed_url = urlparse(url)
-        if parsed_url.path.endswith(".html"):
-            filename = os.path.join(download_folder, base_netloc, parsed_url.path[1:])
-            dirname = os.path.dirname(filename)
+        if parsed_url.path.endswith(".html") or "text/html" in response.headers.get("Content-Type"):
+            file_path = parsed_url.path
+            if file_path.startswith("/"):
+                file_path = file_path[1:]
+            if not file_path or file_path.endswith("/"):
+                file_path = os.path.join(file_path, "index.html")
+            full_file_path = os.path.join(download_folder, base_netloc, file_path)
+            dirname = os.path.dirname(full_file_path)
             if not os.path.exists(dirname):
                 os.makedirs(dirname)
-            with open(filename, "wb") as f:
+            with open(full_file_path, "wb") as f:
                 f.write(response.content)
 
     _download_recursive(url, url)
