@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Iterable
+from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 from singer_sdk import typing as th  # JSON Schema typing helpers
@@ -32,7 +33,7 @@ class BeautifulSoupStream(Stream):
 
     def download(self) -> None:
         """Download the HTML file for the stream."""
-        download(self.site_url, self.output_folder)
+        download(self.site_url, self.output_folder, logger=self.logger)
 
     def parse_file(self, file: Path) -> str:
         """Parse the HTML file for the stream.
@@ -47,18 +48,18 @@ class BeautifulSoupStream(Stream):
             data = f.read()
 
         soup = BeautifulSoup(data, features=self.parser)
-        text = soup.find_all(attrs=self.top_attrs)
+        text = soup.find_all(**self.find_all_kwargs)
         if len(text) != 0:
-            text = text[0].get_text()
+            text = "".join([elem.get_text() for elem in text])
         else:
             text = ""
 
         return "\n".join([t for t in text.split("\n") if t])
 
     @property
-    def top_attrs(self) -> dict:
-        """Return the top-level attributes for the stream."""
-        return {"role": "main"}
+    def find_all_kwargs(self) -> dict:
+        """Return the input find_all kwargs."""
+        return self.config["find_all_kwargs"]
 
     def get_records(self, context: dict | None) -> Iterable[dict]:
         """Return a generator of record-type dictionary objects.
@@ -70,16 +71,18 @@ class BeautifulSoupStream(Stream):
         Args:
             context: Stream partition or context dictionary.
         """
-        self.download()
+        if self.config["download_recursively"]:
+            self.download()
 
         docs = []
-        for p in Path(self.output_folder).glob(f"{self.site_url}/**/*.html"):
+        folder_url_base = urlparse(self.site_url).netloc
+        for p in Path(self.output_folder).glob(f"{folder_url_base}/**/*.html"):
             if p.is_dir():
                 continue
 
             text = self.parse_file(p)
             if not text:
-                self.logger.warning(f"Could not find {self.top_attrs} in file {p}.")
+                self.logger.warning(f"Could not find contents in file {p}, using filters {self.find_all_kwargs}.")
 
             record = {
                 "source": str(p),

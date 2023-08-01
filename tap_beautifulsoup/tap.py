@@ -18,13 +18,12 @@ class TapBeautifulSoup(Tap):
             "source_name",
             th.StringType,
             required=True,
-            default="sdk-docs",
         ),
         th.Property(
             "site_url",
             th.StringType,
             required=True,
-            default="sdk.meltano.com/en/latest/",
+            default="https://sdk.meltano.com/en/latest/",
         ),
         th.Property(
             "output_folder",
@@ -38,6 +37,17 @@ class TapBeautifulSoup(Tap):
             required=True,
             default="html.parser",
             allowed_values=["html.parser"],
+        ),
+        th.Property(
+            "download_recursively",
+            th.BooleanType,
+            default=True,
+            description="Attempt to download all pages recursively into the output directory prior to parsing files. Set this to False if you've previously run `wget -r -A.html https://sdk.meltano.com/en/latest/`",
+        ),
+        th.Property(
+            "find_all_kwargs",
+            th.ObjectType(),
+            description="This dict contains all the kwargs that should be passed to the [`find_all`](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#find-all) call in order to extract text from the pages."
         ),
     ).to_dict()
 
