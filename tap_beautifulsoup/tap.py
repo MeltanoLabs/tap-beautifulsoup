@@ -18,18 +18,21 @@ class TapBeautifulSoup(Tap):
             "source_name",
             th.StringType,
             required=True,
+            description="The name of the source you're scraping. This will be used as the stream name.",
         ),
         th.Property(
             "site_url",
             th.StringType,
             required=True,
-            default="https://sdk.meltano.com/en/latest/",
+            description="The site you'd like to scrape. The tap will download all pages recursively into the output directory prior to parsing files.",
+            examples=["https://sdk.meltano.com/en/latest/"],
         ),
         th.Property(
             "output_folder",
             th.StringType,
             required=True,
             default="output",
+            description="The file path of where to write the intermediate downloaded HTML files to.",
         ),
         th.Property(
             "parser",
@@ -37,6 +40,7 @@ class TapBeautifulSoup(Tap):
             required=True,
             default="html.parser",
             allowed_values=["html.parser"],
+            description="The BeautifulSoup parser to use.",
         ),
         th.Property(
             "download_recursively",
@@ -47,7 +51,8 @@ class TapBeautifulSoup(Tap):
         th.Property(
             "find_all_kwargs",
             th.ObjectType(),
-            description="This dict contains all the kwargs that should be passed to the [`find_all`](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#find-all) call in order to extract text from the pages."
+            description="This dict contains all the kwargs that should be passed to the [`find_all`](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#find-all) call in order to extract text from the pages.",
+            examples=[{"text": True}, {"attrs": {"role": "main"}}]
         ),
     ).to_dict()
 
