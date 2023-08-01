@@ -8,7 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def download(url: str, download_folder: Path | str = "output", verbose: bool = False, logger = None):
+def download(url: str, download_folder: Path | str = "output", logger = None):
     if not os.path.exists(download_folder):
         os.makedirs(download_folder)
 
