@@ -51,6 +51,7 @@ class TapBeautifulSoup(Tap):
         th.Property(
             "find_all_kwargs",
             th.ObjectType(),
+            default={},
             description="This dict contains all the kwargs that should be passed to the [`find_all`](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#find-all) call in order to extract text from the pages.",
             examples=[{"text": True}, {"attrs": {"role": "main"}}]
         ),
