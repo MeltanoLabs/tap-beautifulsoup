@@ -30,14 +30,12 @@ class TapBeautifulSoup(Tap):
         th.Property(
             "output_folder",
             th.StringType,
-            required=True,
             default="output",
             description="The file path of where to write the intermediate downloaded HTML files to.",
         ),
         th.Property(
             "parser",
             th.StringType,
-            required=True,
             default="html.parser",
             allowed_values=["html.parser"],
             description="The BeautifulSoup parser to use.",
