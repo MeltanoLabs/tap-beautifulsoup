@@ -49,6 +49,14 @@ class BeautifulSoupStream(Stream):
 
         soup = BeautifulSoup(data, features=self.parser)
         text = soup.find_all(**self.find_all_kwargs)
+
+        exclude_tags = self.config["exclude_tags"]
+
+        if exclude_tags:
+            for elem in text:
+                for excluded in elem.find_all(exclude_tags):
+                    excluded.extract()
+
         if len(text) != 0:
             text = "".join([elem.get_text() for elem in text])
         else:
