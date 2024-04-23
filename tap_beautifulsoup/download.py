@@ -8,52 +8,52 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def download(url: str, download_folder: Path | str = "output", logger = None):
-    if not os.path.exists(download_folder):
-        os.makedirs(download_folder)
+def download(base_url: str, download_folder: Path, logger=None):
+    visited_paths = set()
 
-    response = requests.get(url)
-    url = response.url
-    parsed_url =  urlparse(url)
-    base_netloc = parsed_url.netloc
-    visited_urls = set()
-    visited_urls.add(parsed_url.path)
+    response = requests.get(base_url)
+    response.raise_for_status()
 
-    def _download_recursive(url, base_url, logger):
-        if not url.startswith(base_url):
+    parsed_base_url = urlparse(response.url)
+    base_url = parsed_base_url.geturl()
+
+    def _download_recursive(url: str, logger):
+        parsed_url = urlparse(url)
+        path = Path(parsed_url.path)
+
+        if not url.startswith(base_url) or path in visited_paths:
             return
+
         try:
             response = requests.get(url)
             response.raise_for_status()
-            url = response.url
         except requests.exceptions.RequestException as e:
             logger.warning(f"Failed to fetch {url}: {e}")
+            return
+        finally:
+            visited_paths.add(path)
+
+        if (
+            path.suffix != ".html"
+            and "text/html" not in response.headers["Content-Type"]
+        ):
             return
 
         soup = BeautifulSoup(response.text, "html.parser")
         links = soup.find_all("a", href=True)
 
         for link in links:
-            href = link["href"]
-            full_url = urljoin(url, href)
-            parsed_url = urlparse(full_url)
+            next_url = urljoin(response.url, link["href"])
+            _download_recursive(next_url, logger)
 
-            if parsed_url.path not in visited_urls and parsed_url.netloc == base_netloc:
-                visited_urls.add(parsed_url.path)
-                _download_recursive(full_url, base_url, logger)
+        if not path.suffix:
+            path = path / "index.html"
 
-        parsed_url = urlparse(url)
-        if parsed_url.path.endswith(".html") or "text/html" in response.headers.get("Content-Type"):
-            file_path = parsed_url.path
-            if file_path.startswith("/"):
-                file_path = file_path[1:]
-            if not file_path or file_path.endswith("/"):
-                file_path = os.path.join(file_path, "index.html")
-            full_file_path = os.path.join(download_folder, base_netloc, file_path)
-            dirname = os.path.dirname(full_file_path)
-            if not os.path.exists(dirname):
-                os.makedirs(dirname)
-            with open(full_file_path, "wb") as f:
-                f.write(response.content)
+        file_path = (
+            download_folder / parsed_base_url.netloc / path.relative_to(path.anchor)
+        )
 
-    _download_recursive(url, url, logger)
+        os.makedirs(file_path.parent, exist_ok=True)
+        file_path.write_bytes(response.content)
+
+    _download_recursive(base_url, logger)
