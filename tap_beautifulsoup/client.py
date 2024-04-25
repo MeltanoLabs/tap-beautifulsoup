@@ -31,9 +31,9 @@ class BeautifulSoupStream(Stream):
         """Return the parser for the stream."""
         return self.config["parser"]
 
-    def download(self) -> None:
+    def download(self):
         """Download the HTML file for the stream."""
-        download(self.site_url, self.output_folder, logger=self.logger)
+        yield from download(self.site_url, self.output_folder, logger=self.logger)
 
     def parse_file(self, file: Path) -> str:
         """Parse the HTML file for the stream.
@@ -71,18 +71,22 @@ class BeautifulSoupStream(Stream):
         Args:
             context: Stream partition or context dictionary.
         """
-        if self.config["download_recursively"]:
+        parsed_url = urlparse(self.site_url)
+        folder_url_base = parsed_url.netloc + parsed_url.path
+
+        html_files = (
             self.download()
+            if self.config["download_recursively"]
+            else (self.output_folder / folder_url_base).rglob("*.html")
+        )
 
         docs = []
-        folder_url_base = urlparse(self.site_url).netloc
-        for p in Path(self.output_folder).glob(f"{folder_url_base}/**/*.html"):
-            if p.is_dir():
-                continue
-
+        for p in html_files:
             text = self.parse_file(p)
             if not text:
-                self.logger.warning(f"Could not find contents in file {p}, using filters {self.find_all_kwargs}.")
+                self.logger.warning(
+                    f"Could not find contents in file {p}, using filters {self.find_all_kwargs}."
+                )
 
             page_url = f"{urlparse(self.site_url).scheme}://{p.relative_to(self.output_folder)}"
             record = {
