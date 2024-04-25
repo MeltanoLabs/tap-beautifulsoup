@@ -84,10 +84,15 @@ class BeautifulSoupStream(Stream):
             if not text:
                 self.logger.warning(f"Could not find contents in file {p}, using filters {self.find_all_kwargs}.")
 
+            page_url = f"{urlparse(self.site_url).scheme}://{p.relative_to(self.output_folder)}"
             record = {
                 "source": str(p),
+                "page_url": page_url,
                 "page_content": text,
-                "metadata": {"source": str(p)},
+                "metadata": {
+                    "source": str(p),
+                    "page_url": page_url,
+                },
             }
             docs.append(record)
             yield record
@@ -97,6 +102,11 @@ class BeautifulSoupStream(Stream):
     schema = th.PropertiesList(
         th.Property("source", th.StringType),
         th.Property(
+            "page_url",
+            th.URIType,
+            description="The original page URL.",
+        ),
+        th.Property(
             "page_content",
             th.StringType,
             description="The page content.",
@@ -105,6 +115,11 @@ class BeautifulSoupStream(Stream):
             "metadata",
             th.ObjectType(
                 th.Property("source", th.StringType),
+                th.Property(
+                    "page_url",
+                    th.URIType,
+                    description="The original page URL.",
+                ),
             ),
         ),
     ).to_dict()
