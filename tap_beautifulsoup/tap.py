@@ -53,6 +53,13 @@ class TapBeautifulSoup(Tap):
             description="This dict contains all the kwargs that should be passed to the [`find_all`](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#find-all) call in order to extract text from the pages.",
             examples=[{"text": True}, {"attrs": {"role": "main"}}]
         ),
+        th.Property(
+            "exclude_tags",
+            th.ArrayType(th.StringType),
+            default=[],
+            description="List of tags to exclude before extracting text content of the page.",
+            examples=[["style"], ["header", "footer"]]
+        ),
     ).to_dict()
 
     def discover_streams(self) -> list[streams.BeautifulSoupStream]:
