@@ -44,7 +44,7 @@ def download(base_url: str, download_folder: Path, logger=None):
 
         for link in links:
             next_url = urljoin(response.url, link["href"])
-            _download_recursive(next_url, logger)
+            yield from _download_recursive(next_url, logger)
 
         if not path.suffix:
             path = path / "index.html"
@@ -56,4 +56,6 @@ def download(base_url: str, download_folder: Path, logger=None):
         os.makedirs(file_path.parent, exist_ok=True)
         file_path.write_bytes(response.content)
 
-    _download_recursive(base_url, logger)
+        yield file_path
+
+    yield from _download_recursive(base_url, logger)
