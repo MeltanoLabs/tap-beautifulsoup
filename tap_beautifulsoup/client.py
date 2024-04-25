@@ -71,8 +71,9 @@ class BeautifulSoupStream(Stream):
         Args:
             context: Stream partition or context dictionary.
         """
+        parsed_url = urlparse(self.site_url)
+        folder_url_base = parsed_url.netloc + parsed_url.path
 
-        folder_url_base = urlparse(self.site_url).netloc
         html_files = (
             self.download()
             if self.config["download_recursively"]
